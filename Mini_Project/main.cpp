@@ -53,6 +53,7 @@ void print_number(cell *** Matrix , const int grid_width , const int grid_length
 
 void print_obstacle(cell *** Matrix , const int grid_width , const int grid_length) ;
 
+bool Soukup(vect & S , vect E , cell *** Matrix ,int &cell_count , int &vias_count);
 
 int main(int argc, const char * argv[]) {
     
@@ -220,6 +221,13 @@ int main(int argc, const char * argv[]) {
         if (S.x_coordinate == E.x_coordinate && S.y_coordinate == E.y_coordinate && S.z_coordinate == E.z_coordinate)
             
             cell_count -- ;
+        
+        
+        soukup = Soukup(S_copy ,  E ,  Matrix ,cell_count ,vias_count) ; // changes source
+        
+        S_reverse = S_copy ;
+        
+        
         
         
         
@@ -754,6 +762,371 @@ void print_obstacle(cell *** Matrix, const int grid_width , const int grid_lengt
     
     
     
+    
+}
+
+
+bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_count)
+
+{
+    
+    bool obstacle = false ;
+    
+    bool done = false ;
+    
+    
+    
+    while (!obstacle && !done)
+        
+    {
+        
+        if ( S.z_coordinate == 0 )
+            
+        {
+            
+            int x_counter = S.x_coordinate ;
+            
+            while ( x_counter != E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == false && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
+                
+            {
+                
+                Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                
+                if (E.x_coordinate> S.x_coordinate)
+                    
+                {
+                    
+                    x_counter ++ ;
+                    
+                    if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                        
+                        cell_count ++ ;
+                    
+                }
+                
+                else
+                    
+                {
+                    
+                    x_counter-- ;
+                    
+                    if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                        
+                        cell_count ++ ;
+                    
+                }
+                
+            }
+            
+            
+            
+            if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
+                
+            {
+                
+                
+                
+                cout << "Reached x_coordinate of Target\n" ;
+                
+                Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                
+                //Go to next metal layer
+                
+                S.x_coordinate = x_counter ;
+                
+                S.z_coordinate = 1 ;
+                
+                vias_count ++ ;
+                
+                cell_count++ ;
+                
+            }
+            
+            else
+                
+                if (Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == true )
+                    
+                {
+                    
+                    obstacle = true ;
+                    
+                    cout << "Found Obstacle\n" ;
+                    
+                    if (E.x_coordinate> S.x_coordinate)
+                        
+                    {
+                        
+                        x_counter -- ;
+                        
+                        cell_count -- ;
+                        
+                    }
+                    
+                    else
+                        
+                    {
+                        
+                        x_counter++;
+                        
+                        cell_count -- ;
+                        
+                    }
+                    
+                    
+                    
+                    ///Go to net metal layer
+                    
+                    S.x_coordinate = x_counter ;
+                    
+                    
+                    
+                }
+            
+                else
+                    
+                {
+                    
+                    done = true ;
+                    
+                    Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                    
+                    done = true ;
+                    
+                    cout << "Found Target \n";
+                    
+                }
+            
+        }
+        
+        else
+            
+            if ( S.z_coordinate == 2 )
+                
+            {
+                
+                int x_counter = S.x_coordinate ;
+                
+                while ( x_counter != E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == false && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
+                    
+                {
+                    
+                    Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                    
+                    if (E.x_coordinate> S.x_coordinate)
+                        
+                    {
+                        
+                        x_counter ++ ;
+                        
+                        cell_count ++ ;
+                        
+                    }
+                    
+                    else
+                        
+                    {
+                        
+                        x_counter-- ;
+                        
+                        cell_count++;
+                        
+                    }
+                    
+                    
+                    
+                }
+                
+                
+                
+                if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
+                    
+                {
+                    
+                    cout << "Reached x_coordinate of Target\n" ;
+                    
+                    Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                    
+                    //Go to next metal layer
+                    
+                    S.x_coordinate = x_counter ;
+                    
+                    S.z_coordinate = 1 ;
+                    
+                    vias_count ++ ;
+                    
+                    cell_count ++ ;
+                    
+                }
+                
+                else
+                    
+                    if (Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == true )
+                        
+                    {
+                        
+                        obstacle = true ;
+                        
+                        cout << "Found Obstacle\n" ;
+                        
+                        if (E.x_coordinate> S.x_coordinate)
+                            
+                        {
+                            
+                            x_counter -- ;
+                            
+                            cell_count --;
+                            
+                        }
+                        
+                        else
+                            
+                        {
+                            
+                            x_counter ++ ;
+                            
+                            cell_count --;
+                            
+                        }
+                        
+                        obstacle = true ;
+                        
+                        ///Go to net metal layer
+                        
+                        S.x_coordinate = x_counter ;
+                        
+                    }
+                
+                    else
+                        
+                    {
+                        
+                        done = true ;
+                        
+                        Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                        
+                        cout << "Found Target \n";
+                        
+                        done = true ;
+                        
+                    }
+                
+            }
+        
+            else
+                
+                if ( S.z_coordinate == 1 )
+                    
+                {
+                    
+                    int y_counter = S.y_coordinate ;
+                    
+                    while ( y_counter != E.y_coordinate && Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle == false && Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == 0)
+                        
+                    {
+                        
+                        Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle = true ;
+                        
+                        if (E.y_coordinate> S.y_coordinate)
+                            
+                        {
+                            
+                            y_counter ++ ;
+                            
+                            cell_count++ ;
+                            
+                        }
+                        
+                        else
+                            
+                        {
+                            
+                            y_counter-- ;
+                            
+                            cell_count++;
+                            
+                        }
+                        
+                    }
+                    
+                    
+                    
+                    if(y_counter == E.y_coordinate && Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == 0)
+                        
+                    {
+                        
+                        cout << "Reached y_coordinate of Target\n" ;
+                        
+                        Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle = true ;
+                        
+                        //Go to next metal layer
+                        
+                        S.y_coordinate = y_counter ;
+                        
+                        S.z_coordinate = 0 ;
+                        
+                        if (Matrix[S.x_coordinate] [S.y_coordinate][S.z_coordinate].obstacle == true  || E.z_coordinate == 2)
+                            
+                            S.z_coordinate = 2;
+                        
+                        vias_count ++ ;
+                        
+                    }
+                    
+                    else
+                        
+                        if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle == true )
+                            
+                        {
+                            
+                            cout << "Found Obstacle\n" ;
+                            
+                            obstacle = true ;
+                            
+                            if (E.y_coordinate> S.y_coordinate)
+                                
+                            {
+                                
+                                y_counter -- ;
+                                
+                                cell_count-- ;
+                                
+                            }
+                            
+                            else
+                                
+                            {
+                                
+                                y_counter ++ ;
+                                
+                                cell_count--;
+                                
+                            }
+                            
+                            ///Go to net metal layer
+                            
+                            S.y_coordinate = y_counter ;
+                            
+                            
+                            
+                        }
+                    
+                        else
+                            
+                        {
+                            
+                            Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle = true ;
+                            
+                            cout << "Found Target \n";
+                            
+                            done = true ;
+                            
+                        }
+                    
+                }
+        
+    }
+    
+    return done ;
     
 }
 
