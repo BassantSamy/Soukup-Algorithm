@@ -152,7 +152,8 @@ int main(int argc, const char * argv[]) {
         {
             reverse_soukup (Matrix , S_reverse , S );
             print_obstacle( Matrix , grid_width ,  grid_length);
-            cell_count -- ; //remove source from count
+            cell_count= 0 ;
+            vias_count = 0 ;
             cout << "No Possible Path \n" ;
         }
         else
@@ -709,44 +710,52 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
             
             
             
-            if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
+            if (Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == true )
                 
             {
-                cout << "Reached x_coordinate of Target\n" ;
-                Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
-                //Go to next metal layer
+                
+                obstacle = true ;
+                cout << "Found Obstacle\n" ;
+                if (E.x_coordinate> S.x_coordinate)
+                    
+                {
+                    x_counter -- ;
+                    cell_count -- ;
+                }
+                
+                else
+                    
+                {
+                    x_counter++;
+                    cell_count -- ;
+                }
+                
+                ///Go to net metal layer
                 S.x_coordinate = x_counter ;
-                S.z_coordinate = 1 ;
-                vias_count ++ ;
-                if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
-                    cell_count++ ;
                 
             }
             
             else
-                
-                if (Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == true )
+                if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
                     
                 {
+                    cout << "Reached x_coordinate of Target\n" ;
+                    Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                    //Go to next metal layer
                     
-                    obstacle = true ;
-                    cout << "Found Obstacle\n" ;
-                    if (E.x_coordinate> S.x_coordinate)
-                        
+                    if (Matrix[x_counter][S.y_coordinate][1].obstacle == false)
                     {
-                        x_counter -- ;
-                        cell_count -- ;
+                        S.x_coordinate = x_counter ;
+                        S.z_coordinate = 1 ;
+                        vias_count ++ ;
+                        if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                            cell_count++ ;
                     }
-                    
                     else
-                        
                     {
-                        x_counter++;
-                        cell_count -- ;
+                        S.x_coordinate = x_counter ;
+                        obstacle = true ;
                     }
-                    
-                    ///Go to net metal layer
-                    S.x_coordinate = x_counter ;
                     
                 }
             
@@ -803,56 +812,64 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                 }
                 
                 
-                
-                if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
+                if (Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == true )
                     
                 {
                     
-                    cout << "Reached x_coordinate of Target\n" ;
+                    obstacle = true ;
+                    cout << "Found Obstacle\n" ;
                     
-                    Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                    if (E.x_coordinate> S.x_coordinate)
+                        
+                    {
+                        x_counter -- ;
+                        cell_count --;
+                    }
                     
-                    //Go to next metal layer
+                    else
+                        
+                    {
+                        x_counter ++ ;
+                        cell_count --;
+                    }
                     
+                    obstacle = true ;
+                    ///Go to net metal layer
                     S.x_coordinate = x_counter ;
-                    
-                    S.z_coordinate = 1 ;
-                    
-                    vias_count ++ ;
-                    if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
-                        cell_count ++ ;
-                    
                 }
                 
                 else
-                    
-                    if (Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == true )
+                    if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
                         
                     {
                         
-                        obstacle = true ;
-                        cout << "Found Obstacle\n" ;
+                        cout << "Reached x_coordinate of Target\n" ;
                         
-                        if (E.x_coordinate> S.x_coordinate)
-                            
+                        Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
+                        
+                        
+                        if (Matrix[x_counter][S.y_coordinate][1].obstacle == false)
                         {
-                            x_counter -- ;
-                            cell_count --;
+                            //Go to next metal layer
+                            S.x_coordinate = x_counter ;
+                            S.z_coordinate = 1 ;
+                            vias_count ++ ;
+                            if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                                cell_count ++ ;
+                            
                         }
-                        
                         else
-                            
                         {
-                            x_counter ++ ;
-                            cell_count --;
+                            S.x_coordinate = x_counter ;
+                            obstacle = true ;
                         }
                         
-                        obstacle = true ;
-                        ///Go to net metal layer
-                        S.x_coordinate = x_counter ;
+                        
+                        
                     }
                 
                     else
+                        
                         
                     {
                         done = true ;
@@ -899,52 +916,64 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                         
                     }
                     
-                    
-                    
-                    if(y_counter == E.y_coordinate && Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == 0)
+                    if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle == true )
                         
                     {
-                        
-                        cout << "Reached y_coordinate of Target\n" ;
-                        
-                        Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle = true ;
-                        
-                        //Go to next metal layer
-                        
-                        S.y_coordinate = y_counter ;
-                        
-                        S.z_coordinate = 0 ;
-                        
-                        if (Matrix[S.x_coordinate] [S.y_coordinate][S.z_coordinate].obstacle == true  || E.z_coordinate == 2)
-                            S.z_coordinate = 2;
-                        vias_count ++ ;
-                        if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == false )
-                            cell_count ++ ;
-                        
-                    }
-                    
-                    else
-                        
-                        if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle == true )
+                        cout << "Found Obstacle\n" ;
+                        obstacle = true ;
+                        if (E.y_coordinate> S.y_coordinate)
                             
                         {
-                            cout << "Found Obstacle\n" ;
-                            obstacle = true ;
-                            if (E.y_coordinate> S.y_coordinate)
-                                
+                            y_counter -- ;
+                            cell_count-- ;
+                        }
+                        else
+                            
+                        {
+                            y_counter ++ ;
+                            cell_count--;
+                        }
+                        ///Go to net metal layer
+                        S.y_coordinate = y_counter ;
+                    }
+                    else
+                        if(y_counter == E.y_coordinate && Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == 0)
+                            
+                        {
+                            
+                            cout << "Reached y_coordinate of Target\n" ;
+                            
+                            Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle = true ;
+                            int z_forecast ;
+                            z_forecast = 0 ;
+                            
+                            if (Matrix[S.x_coordinate] [S.y_coordinate][z_forecast].obstacle == true  || E.z_coordinate == 2)
+                                z_forecast = 2;
+                            
+                            if (Matrix[S.x_coordinate][y_counter][z_forecast].obstacle == false)
                             {
-                                y_counter -- ;
-                                cell_count-- ;
+                                
+                                //Go to next metal layer
+                                
+                                S.y_coordinate = y_counter ;
+                                
+                                S.z_coordinate = 0 ;
+                                
+                                if (Matrix[S.x_coordinate] [S.y_coordinate][S.z_coordinate].obstacle == true  || E.z_coordinate == 2)
+                                    S.z_coordinate = 2;
+                                
+                                vias_count ++ ;
+                                if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == false )
+                                    cell_count ++ ;
                             }
                             else
-                                
                             {
-                                y_counter ++ ;
-                                cell_count--;
+                                S.y_coordinate = y_counter ;
+                                obstacle = true ;
                             }
-                            ///Go to net metal layer
-                            S.y_coordinate = y_counter ;
+                            
                         }
+                    
                         else
                             
                         {
@@ -1136,31 +1165,18 @@ void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_l
 {
     
     int number = Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate].number - 1; //starting number
-    
-    
-    
-    while(number > 1) //reached source
+    while(number >= 1) //reached source
         
     {
-        
         Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate].obstacle = true;
-        
-        
-        
         if (E.z_coordinate == 1) //at Metal 2
             
         {
-            
-            
-            
             if (E.y_coordinate -1 >= 0 && Matrix[E.x_coordinate][E.y_coordinate-1][E.z_coordinate].number == number) //search up
                 
             {
-                
                 E.y_coordinate -- ;
-                
                 number-- ;
-                
                 cell_count++ ;
                 
             }
@@ -1168,17 +1184,10 @@ void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_l
             else
                 
                 if (E.y_coordinate+1 < grid_length && Matrix[E.x_coordinate][E.y_coordinate+1][E.z_coordinate].number == number) //search down
-                    
                 {
-                    
                     E.y_coordinate ++ ;
-                    
                     number --;
-                    
                     cell_count++ ;
-                    
-                    
-                    
                 }
             
                 else
@@ -1186,16 +1195,10 @@ void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_l
                     if ( E.z_coordinate-1 >=0 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate-1].number == number+1-vias_cost) //search below
                         
                     {
-                        
                         vias_count ++ ;
-                        
                         E.z_coordinate -- ;
-                        
                         number = number - vias_cost  ;
-                        
                         cell_count++ ;
-                        
-                        
                         
                     }
             
@@ -1204,79 +1207,42 @@ void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_l
                         if ( E.z_coordinate+1 < 3 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate+1].number == number+1-vias_cost) //search above
                             
                         {
-                            
                             vias_count ++ ;
-                            
                             E.z_coordinate ++ ;
-                            
-                            number = number - vias_cost  ;
-                            
+                            number = number - vias_cost ;
                             cell_count++ ;
-                            
-                            
-                            
                         }
             
                         else
-                            
                             cout <<"Backtracing Error"; //cannot go vertical
             
-            
-            
         }
-        
         else //at Metal 1 or 3
-            
         {
-            
-            
-            
             if (E.x_coordinate-1 >= 0 && Matrix[E.x_coordinate-1][E.y_coordinate][E.z_coordinate].number == number) //search left
-                
             {
-                
                 E.x_coordinate -- ;
-                
                 number-- ;
-                
                 cell_count++ ;
-                
-                
                 
             }
             
             else
                 
                 if (E.x_coordinate+1 < grid_width && Matrix[E.x_coordinate+1][E.y_coordinate][E.z_coordinate].number == number) //search right
-                    
                 {
-                    
                     E.x_coordinate ++ ;
-                    
                     number --;
-                    
                     cell_count++ ;
-                    
-                    
-                    
                 }
             
                 else
-                    
                     if ( E.z_coordinate-1 >=0 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate-1].number == number+1-vias_cost) //search below
-                        
                     {
-                        
                         vias_count ++ ;
-                        
                         E.z_coordinate -- ;
-                        
                         number = number - vias_cost ;
-                        
                         cell_count++ ;
-                        
-                        
-                        
                     }
             
                     else
@@ -1284,37 +1250,19 @@ void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_l
                         if ( E.z_coordinate+1 < 3 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate+1].number == number+1-vias_cost) //search above
                             
                         {
-                            
                             vias_count ++ ;
-                            
                             E.z_coordinate ++ ;
-                            
                             number=  number - vias_cost ;
-                            
                             cell_count++ ;
-                            
-                            
-                            
                         }
             
                         else
-                            
                             cout <<"Backtracing Error"; //cannot go vertical
-            
-            
             
         }
         
-        
-        
     }
-    
-    
-    
     cell_count -- ; //recounts source !!
-    
-    
-    
 }
 
 
