@@ -1,266 +1,183 @@
-
-///Make Metal Layers Uni Directional
-
-///Add cost of via
-
-///Backtrack
-
-
-
 #include <iostream>
-
 #include <stdio.h>
-
 #include <time.h>
-
 using namespace std ;
 
-
-
-
-
-struct vect {
-    
+struct vect
+{
     int x_coordinate = 0;
-    
     int y_coordinate = 0 ;
-    
     int z_coordinate = 0 ;
-    
 };
-
-
 
 struct cell
 
 {
-    
     bool obstacle  = false;
-    
     int number = 0 ;
-    
     bool S = false;
-    
     bool T  = false;
-    
 };
 
 
 
 bool input_validate (bool first , int grid_width , int grid_length ,vect& S , vect& E , cell *** Matrix) ;
-
 void print_number(cell *** Matrix , const int grid_width , const int grid_length) ;
-
 void print_obstacle(cell *** Matrix , const int grid_width , const int grid_length) ;
-
 bool Soukup(vect & S , vect E , cell *** Matrix ,int &cell_count , int &vias_count);
-
-bool Fill(vect S , vect E , cell *** Matrix , int grid_width , int grid_length , int vias_cost);
-
 void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_length , int &cell_count , int &vias_count,float vias_cost );
+bool Fill(vect S , vect E , cell *** Matrix , int grid_width , int grid_length , int vias_cost);
+void reverse_soukup (cell *** & Matrix ,vect  S_reverse ,vect  S );
+void cleanup (cell *** Matrix , int grid_width ,  int grid_length );
 
 int main(int argc, const char * argv[]) {
     
-    
-    
     vect S;
-    
     vect S_reverse ;
-    
     vect S_copy;
-    
     vect E;
-    
     vect E_copy ;
-    
     int grid_width = 0;
-    
     int grid_length = 0 ;
-    
     cell *** Matrix  ;
-    
     bool  soukup = false ;
-    
     bool fill = false ;
-    
     bool exit = false ;
-    
     int cell_count = 0 ;
-    
     int vias_count = 0 ;
-    
     float vias_cost ;
     
-    
-    
     cout <<"Enter Grid Width";
-    
     cin >> grid_width ;
-    
-    
     
     while (grid_width < 1 )
         
     {
-        
         cout <<"Width Less than 1, please Re-enter";
-        
         cin >> grid_width ;
-        
     }
     
     
-    
     cout <<"Enter Grid Length";
-    
     cin >> grid_length ;
-    
     
     
     while (grid_length < 1 )
         
     {
-        
         cout <<"Length Less than 1, please Re-enter";
-        
         cin >>grid_length;
-        
     }
-    
     
     
     cout << "Enter Vias Cost";
-    
     cin >> vias_cost ;
     
-    
-    
     while (vias_cost <0)
-        
     {
-        
         cout << "Re-enter Cost";
-        
         cin >>vias_cost ;
-        
     }
-    
-    
     
     exit = input_validate (1,grid_width , grid_length ,  S , E ,Matrix);
     
-    
-    
     Matrix = new cell **[grid_width];
-    
-    
     
     for (int i=0 ;i< grid_width ; i++)
         
         Matrix[i] = new cell *[grid_length];
     
-    
-    
-    
-    
     for (int j =0 ;j< grid_length ;j++)
-        
         for (int i=0 ;i<grid_width ;i++)
-            
             Matrix[i][j] = new cell [3];
     
     
     
     for (int z = 0 ; z< 3 ;z++)
-        
         for (int j =0 ;j< grid_length ;j++)
-            
             for (int i=0 ;i<grid_width ;i++)
-                
             {
-                
                 Matrix[i][j][z].number =0;
-                
                 Matrix[i][j][z].obstacle = false;
-                
                 Matrix[i][j][z].S = false ;
-                
                 Matrix[i][j][z].T = false;
-                
             }
     
     // Matrix[7][4][0].obstacle = true ;
     
     while (!exit)
-        
     {
-        
         double time_taken ;
-        
         cell_count = 0 ;
-        
         vias_count = 0 ;
-       
+        S_copy = S ;
+        E_copy = E ;
+        soukup = 0 ;
+        fill = 0;
+        clock_t t;
+        t = clock();
         
         /////// Mark Cell with Source  ////////
-        
-        
-        
         Matrix [S.x_coordinate] [S.y_coordinate] [S.z_coordinate].S = true ;
-        
         cell_count ++ ;
         
         
         
         ////// Mark Cell With Target ////
-        
-        
-        
         Matrix [E.x_coordinate] [E.y_coordinate][E.z_coordinate].T = true ;
-        
         cell_count ++ ;
         
         
         
         if (S.x_coordinate == E.x_coordinate && S.y_coordinate == E.y_coordinate && S.z_coordinate == E.z_coordinate)
-            
             cell_count -- ;
         
         
+        
         soukup = Soukup(S_copy ,  E ,  Matrix ,cell_count ,vias_count) ; // changes source
-        
         S_reverse = S_copy ;
-        
-        
-        
-        
         
         print_obstacle( Matrix , grid_width ,  grid_length);
         
         if (soukup == 0)
             
         {
-            
             fill = Fill( S_copy ,  E , Matrix ,  grid_width ,  grid_length ,  vias_cost);
-            
-            
-            
             print_number( Matrix , grid_width ,  grid_length);
-            
             Backtrace (E_copy , S , Matrix ,  grid_width ,  grid_length , cell_count , vias_count,vias_cost );
-            
-            print_obstacle( Matrix , grid_width ,  grid_length);
-            
         }
+        
+        if (fill == 0 && soukup == 0)
+            
+        {
+            reverse_soukup (Matrix , S_reverse , S );
+            print_obstacle( Matrix , grid_width ,  grid_length);
+            cell_count -- ; //remove source from count
+            cout << "No Possible Path \n" ;
+        }
+        else
+            if (fill == 1 && soukup == 0)
+            {
+                print_obstacle( Matrix , grid_width ,  grid_length);
+                cout << "Found Route Slow \n";
+            }
+            else
+                if (soukup ==1 && fill ==0)
+                {
+                    cout << "Found Route Fast !! \n";
+                }
+        cleanup (Matrix , grid_width , grid_length );
+        
+        t = clock() - t;
+        time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+        
+        cout << "Cost is: " << cell_count +vias_count*vias_cost <<endl;
+        cout << "CPU Time is: " <<time_taken <<" seconds"<< endl ;
         
         exit = input_validate (0,grid_width , grid_length ,  S , E , Matrix);
         
-        
-        
     }
-    
     return 0;
-    
 }
 
 bool input_validate (bool first , int grid_width , int grid_length ,vect& S , vect& E , cell *** Matrix)
@@ -430,19 +347,11 @@ bool input_validate (bool first , int grid_width , int grid_length ,vect& S , ve
             
             
             S.z_coordinate -= 1 ;
-            
-            
-            
-            
-            
-            
-            
         }
         
     }
     
     cout <<"Enter Ending Point X_coordinate";
-    
     cin >> E.x_coordinate ;
     
     
@@ -610,13 +519,6 @@ bool input_validate (bool first , int grid_width , int grid_length ,vect& S , ve
     }
     
     return exit ;
-    
-    
-    
-    
-    
-    
-    
 }
 
 
@@ -701,12 +603,6 @@ void print_number(cell *** Matrix, const int grid_width , const int grid_length)
         
     }
     
-    
-    
-    
-    
-    
-    
 }
 
 
@@ -772,16 +668,8 @@ void print_obstacle(cell *** Matrix, const int grid_width , const int grid_lengt
         cout << endl ;
         
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
 }
+
 
 
 bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_count)
@@ -789,23 +677,17 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
 {
     
     bool obstacle = false ;
-    
     bool done = false ;
-    
-    
     
     while (!obstacle && !done)
         
     {
         
         if ( S.z_coordinate == 0 )
-            
         {
             
             int x_counter = S.x_coordinate ;
-            
             while ( x_counter != E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle == false && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
-                
             {
                 
                 Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
@@ -813,27 +695,16 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                 if (E.x_coordinate> S.x_coordinate)
                     
                 {
-                    
                     x_counter ++ ;
-                    
                     if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
-                        
                         cell_count ++ ;
-                    
                 }
-                
                 else
-                    
                 {
-                    
                     x_counter-- ;
-                    
                     if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
-                        
                         cell_count ++ ;
-                    
                 }
-                
             }
             
             
@@ -841,22 +712,14 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
             if(x_counter == E.x_coordinate && Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == 0)
                 
             {
-                
-                
-                
                 cout << "Reached x_coordinate of Target\n" ;
-                
                 Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
-                
                 //Go to next metal layer
-                
                 S.x_coordinate = x_counter ;
-                
                 S.z_coordinate = 1 ;
-                
                 vias_count ++ ;
-                
-                cell_count++ ;
+                if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                    cell_count++ ;
                 
             }
             
@@ -867,36 +730,23 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                 {
                     
                     obstacle = true ;
-                    
                     cout << "Found Obstacle\n" ;
-                    
                     if (E.x_coordinate> S.x_coordinate)
                         
                     {
-                        
                         x_counter -- ;
-                        
                         cell_count -- ;
-                        
                     }
                     
                     else
                         
                     {
-                        
                         x_counter++;
-                        
                         cell_count -- ;
-                        
                     }
                     
-                    
-                    
                     ///Go to net metal layer
-                    
                     S.x_coordinate = x_counter ;
-                    
-                    
                     
                 }
             
@@ -935,8 +785,8 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                     {
                         
                         x_counter ++ ;
-                        
-                        cell_count ++ ;
+                        if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                            cell_count ++ ;
                         
                     }
                     
@@ -945,12 +795,10 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                     {
                         
                         x_counter-- ;
-                        
-                        cell_count++;
+                        if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                            cell_count++;
                         
                     }
-                    
-                    
                     
                 }
                 
@@ -971,8 +819,8 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                     S.z_coordinate = 1 ;
                     
                     vias_count ++ ;
-                    
-                    cell_count ++ ;
+                    if ( Matrix[x_counter][S.y_coordinate][S.z_coordinate].T == false )
+                        cell_count ++ ;
                     
                 }
                 
@@ -983,49 +831,34 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                     {
                         
                         obstacle = true ;
-                        
                         cout << "Found Obstacle\n" ;
                         
                         if (E.x_coordinate> S.x_coordinate)
                             
                         {
-                            
                             x_counter -- ;
-                            
                             cell_count --;
-                            
                         }
                         
                         else
                             
                         {
-                            
                             x_counter ++ ;
-                            
                             cell_count --;
-                            
                         }
                         
                         obstacle = true ;
-                        
                         ///Go to net metal layer
-                        
                         S.x_coordinate = x_counter ;
-                        
                     }
                 
                     else
                         
                     {
-                        
                         done = true ;
-                        
                         Matrix[x_counter][S.y_coordinate][S.z_coordinate].obstacle = true ;
-                        
-                        cout << "Found Target \n";
-                        
+                        cout << "Found Target \n";\
                         done = true ;
-                        
                     }
                 
             }
@@ -1049,8 +882,8 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                         {
                             
                             y_counter ++ ;
-                            
-                            cell_count++ ;
+                            if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == false  && Matrix[S.x_coordinate][y_counter][S.z_coordinate].S == false)
+                                cell_count++ ;
                             
                         }
                         
@@ -1059,8 +892,8 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                         {
                             
                             y_counter-- ;
-                            
-                            cell_count++;
+                            if ( Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == false && Matrix[S.x_coordinate][y_counter][S.z_coordinate].S == false)
+                                cell_count++;
                             
                         }
                         
@@ -1083,10 +916,10 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                         S.z_coordinate = 0 ;
                         
                         if (Matrix[S.x_coordinate] [S.y_coordinate][S.z_coordinate].obstacle == true  || E.z_coordinate == 2)
-                            
                             S.z_coordinate = 2;
-                        
                         vias_count ++ ;
+                        if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].T == false )
+                            cell_count ++ ;
                         
                     }
                     
@@ -1095,49 +928,29 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
                         if (Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle == true )
                             
                         {
-                            
                             cout << "Found Obstacle\n" ;
-                            
                             obstacle = true ;
-                            
                             if (E.y_coordinate> S.y_coordinate)
                                 
                             {
-                                
                                 y_counter -- ;
-                                
                                 cell_count-- ;
-                                
                             }
-                            
                             else
                                 
                             {
-                                
                                 y_counter ++ ;
-                                
                                 cell_count--;
-                                
                             }
-                            
                             ///Go to net metal layer
-                            
                             S.y_coordinate = y_counter ;
-                            
-                            
-                            
                         }
-                    
                         else
                             
                         {
-                            
                             Matrix[S.x_coordinate][y_counter][S.z_coordinate].obstacle = true ;
-                            
                             cout << "Found Target \n";
-                            
                             done = true ;
-                            
                         }
                     
                 }
@@ -1147,6 +960,8 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
     return done ;
     
 }
+
+
 
 bool Fill(vect S , vect E , cell *** Matrix , int grid_width , int grid_length , int vias_cost)
 
@@ -1311,6 +1126,10 @@ bool Fill(vect S , vect E , cell *** Matrix , int grid_width , int grid_length ,
     return done ;
     
 }
+
+
+
+
 
 void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_length , int &cell_count , int &vias_count , float vias_cost)
 
@@ -1497,3 +1316,128 @@ void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_l
     
     
 }
+
+
+
+void cleanup (cell *** Matrix , int grid_width, int grid_length )
+
+{
+    
+    for (int z=0 ;z< 3 ;z++)
+        
+        for (int j=0 ;j<grid_length ; j++)
+            
+            for (int i =0 ;i< grid_width ;i++)
+                
+            {
+                
+                Matrix[i][j][z].number = 0 ;
+                
+                Matrix[i][j][z].S = 0;
+                
+                Matrix[i][j][z].T = 0;
+                
+            }
+    
+}
+
+
+
+void reverse_soukup (cell *** &Matrix ,vect  S_reverse ,vect  S )
+
+{
+    
+    int counter ;
+    
+    if (S.z_coordinate == 0 || S.z_coordinate == 2 )
+        
+    {
+        
+        Matrix[S_reverse.x_coordinate][S_reverse.y_coordinate][S_reverse.z_coordinate].obstacle = false ;
+        
+        if (S_reverse.x_coordinate > S.x_coordinate) //to left of source
+            
+        {
+            
+            counter = S_reverse.x_coordinate-1 ;
+            
+            while (counter >= S.x_coordinate)
+                
+            {
+                
+                Matrix[counter][S_reverse.y_coordinate][S_reverse.z_coordinate].obstacle = 0 ;
+                
+                counter -- ;
+                
+            }
+            
+        }
+        
+        else // to right of source
+            
+        {
+            
+            counter = S_reverse.x_coordinate + 1 ;
+            
+            while (counter <= S.x_coordinate)
+                
+            {
+                
+                Matrix[counter][S_reverse.y_coordinate][S_reverse.z_coordinate].obstacle = 0 ;
+                
+                counter ++ ;
+                
+            }
+            
+        }
+        
+        
+        
+    }
+    
+    else //metal 2
+        
+    {
+        
+        Matrix[S_reverse.x_coordinate][S_reverse.y_coordinate][S_reverse.z_coordinate].obstacle = false ;
+        
+        if (S_reverse.y_coordinate > S.y_coordinate) //to below sorce
+            
+        {
+            
+            counter = S_reverse.y_coordinate-1 ;
+            
+            while (counter >= S.y_coordinate)
+                
+            {
+                
+                Matrix[S_reverse.x_coordinate][counter][S_reverse.z_coordinate].obstacle = 0 ;
+                
+                counter -- ;
+                
+            }
+            
+        }
+        
+        else //above source
+            
+        {
+            
+            counter = S_reverse.y_coordinate+1 ;
+            
+            while (counter <= S.y_coordinate)
+                
+            {
+                
+                Matrix[S_reverse.x_coordinate][counter][S_reverse.z_coordinate].obstacle = 0 ;
+                
+                counter ++ ;
+                
+            }
+            
+        }
+        
+    }
+    
+}
+
