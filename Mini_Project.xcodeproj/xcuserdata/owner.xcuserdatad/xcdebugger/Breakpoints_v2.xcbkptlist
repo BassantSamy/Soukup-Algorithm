@@ -10,11 +10,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Mini_Project/main.cpp"
-            timestampString = "577367698.272326"
+            timestampString = "577492537.802376"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1149"
-            endingLineNumber = "1149">
+            endingLineNumber = "1149"
+            landmarkName = "Backtrace (vect &amp; E ,vect S , cell *** Matrix , int grid_width , int grid_length , int &amp;cell_count , int &amp;vias_count , float vias_cost)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
