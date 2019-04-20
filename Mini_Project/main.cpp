@@ -55,6 +55,10 @@ void print_obstacle(cell *** Matrix , const int grid_width , const int grid_leng
 
 bool Soukup(vect & S , vect E , cell *** Matrix ,int &cell_count , int &vias_count);
 
+bool Fill(vect S , vect E , cell *** Matrix , int grid_width , int grid_length , int vias_cost);
+
+void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_length , int &cell_count , int &vias_count,float vias_cost );
+
 int main(int argc, const char * argv[]) {
     
     
@@ -233,7 +237,21 @@ int main(int argc, const char * argv[]) {
         
         print_obstacle( Matrix , grid_width ,  grid_length);
         
-        
+        if (soukup == 0)
+            
+        {
+            
+            fill = Fill( S_copy ,  E , Matrix ,  grid_width ,  grid_length ,  vias_cost);
+            
+            
+            
+            print_number( Matrix , grid_width ,  grid_length);
+            
+            Backtrace (E_copy , S , Matrix ,  grid_width ,  grid_length , cell_count , vias_count,vias_cost );
+            
+            print_obstacle( Matrix , grid_width ,  grid_length);
+            
+        }
         
         exit = input_validate (0,grid_width , grid_length ,  S , E , Matrix);
         
@@ -1130,3 +1148,352 @@ bool Soukup(vect & S , vect E , cell *** Matrix ,int & cell_count , int &vias_co
     
 }
 
+bool Fill(vect S , vect E , cell *** Matrix , int grid_width , int grid_length , int vias_cost)
+
+{
+    
+    Matrix[S.x_coordinate][S.y_coordinate][S.z_coordinate].number = 1 ; //set source to 1
+    
+    bool done = false ;
+    
+    bool changed = true ;
+    
+    
+    
+    while (changed && !done)
+        
+    {
+        
+        changed = false ;
+        
+        for (int z =0 ;z< 3  ;z++)
+            
+            for (int j =0 ;j< grid_length ;j++)
+                
+                for (int i=0 ;i< grid_width ;i++ )
+                    
+                {
+                    
+                    
+                    
+                    if (Matrix[i][j][z].number !=0)
+                        
+                    {
+                        
+                        ////Where Can I go to from this Cell???
+                        
+                        if (z==0 || z==2) //metal layer 1 or 3
+                            
+                        {
+                            
+                            //////Can go right & left from this cell
+                            
+                            if (i+1 < grid_width && Matrix[i+1][j][z].obstacle == 0 && Matrix[i+1][j][z].number == 0)
+                                
+                            {
+                                
+                                Matrix[i+1][j][z].number = Matrix[i][j][z].number + 1;
+                                
+                                changed = true;
+                                
+                                if (Matrix[i+1][j][z].T == true) //if target
+                                    
+                                    done = true ; //mark done
+                                
+                            }
+                            
+                            
+                            
+                            if (i-1 >=0 && Matrix[i-1][j][z].obstacle == 0 && Matrix[i-1][j][z].number == 0)
+                                
+                            {
+                                
+                                Matrix[i-1][j][z].number = Matrix[i][j][z].number + 1;
+                                
+                                changed = true;
+                                
+                                if (Matrix[i-1][j][z].T == true) //if target
+                                    
+                                    done = true ; //mark done
+                                
+                            }
+                            
+                            //////Cannot Go up or down
+                            
+                            
+                            
+                        }
+                        
+                        else //metal layer 2
+                            
+                        {
+                            
+                            //////Can go up & down
+                            
+                            if (j+1 < grid_length && Matrix[i][j+1][z].obstacle == 0 && Matrix[i][j+1][z].number == 0)
+                                
+                            {
+                                
+                                Matrix[i][j+1][z].number = Matrix[i][j][z].number + 1;
+                                
+                                changed = true;
+                                
+                                if (Matrix[i][j+1][z].T == true) //if target
+                                    
+                                    done = true ; //mark done
+                                
+                            }
+                            
+                            
+                            
+                            if (j-1 >=0 && Matrix[i][j-1][z].obstacle == 0 && Matrix[i][j-1][z].number == 0)
+                                
+                            {
+                                
+                                Matrix[i][j-1][z].number = Matrix[i][j][z].number + 1;
+                                
+                                changed = true;
+                                
+                                if (Matrix[i][j-1][z].T == true) //if target
+                                    
+                                    done = true ; //mark done
+                                
+                            }
+                            
+                            
+                            
+                            //Cannot go right or left
+                            
+                        }
+                        
+                        
+                        
+                        /////////Can Always go above and below from cell
+                        
+                        if (z+1 < 3 && Matrix[i][j][z+1].obstacle == 0 && Matrix[i][j][z+1].number == 0)
+                            
+                        {
+                            
+                            Matrix[i][j][z+1].number = Matrix[i][j][z].number + vias_cost;
+                            
+                            changed = true;
+                            
+                            if (Matrix[i][j][z+1].T == true) //if target
+                                
+                                done = true ; //mark done
+                            
+                        }
+                        
+                        
+                        
+                        if (z-1 >=0 && Matrix[i][j][z-1].obstacle == 0 && Matrix[i][j][z-1].number == 0)
+                            
+                        {
+                            
+                            Matrix[i][j][z-1].number = Matrix[i][j][z].number + vias_cost;
+                            
+                            changed = true;
+                            
+                            if (Matrix[i][j][z-1].T == true) //if target
+                                
+                                done = true ; //mark done
+                            
+                        }
+                        
+                        
+                        
+                    }
+                    
+                }
+        
+    }
+    
+    return done ;
+    
+}
+
+void Backtrace (vect & E ,vect S , cell *** Matrix , int grid_width , int grid_length , int &cell_count , int &vias_count , float vias_cost)
+
+{
+    
+    int number = Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate].number - 1; //starting number
+    
+    
+    
+    while(number > 1) //reached source
+        
+    {
+        
+        Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate].obstacle = true;
+        
+        
+        
+        if (E.z_coordinate == 1) //at Metal 2
+            
+        {
+            
+            
+            
+            if (E.y_coordinate -1 >= 0 && Matrix[E.x_coordinate][E.y_coordinate-1][E.z_coordinate].number == number) //search up
+                
+            {
+                
+                E.y_coordinate -- ;
+                
+                number-- ;
+                
+                cell_count++ ;
+                
+            }
+            
+            else
+                
+                if (E.y_coordinate+1 < grid_length && Matrix[E.x_coordinate][E.y_coordinate+1][E.z_coordinate].number == number) //search down
+                    
+                {
+                    
+                    E.y_coordinate ++ ;
+                    
+                    number --;
+                    
+                    cell_count++ ;
+                    
+                    
+                    
+                }
+            
+                else
+                    
+                    if ( E.z_coordinate-1 >=0 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate-1].number == number+1-vias_cost) //search below
+                        
+                    {
+                        
+                        vias_count ++ ;
+                        
+                        E.z_coordinate -- ;
+                        
+                        number = number - vias_cost  ;
+                        
+                        cell_count++ ;
+                        
+                        
+                        
+                    }
+            
+                    else
+                        
+                        if ( E.z_coordinate+1 < 3 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate+1].number == number+1-vias_cost) //search above
+                            
+                        {
+                            
+                            vias_count ++ ;
+                            
+                            E.z_coordinate ++ ;
+                            
+                            number = number - vias_cost  ;
+                            
+                            cell_count++ ;
+                            
+                            
+                            
+                        }
+            
+                        else
+                            
+                            cout <<"Backtracing Error"; //cannot go vertical
+            
+            
+            
+        }
+        
+        else //at Metal 1 or 3
+            
+        {
+            
+            
+            
+            if (E.x_coordinate-1 >= 0 && Matrix[E.x_coordinate-1][E.y_coordinate][E.z_coordinate].number == number) //search left
+                
+            {
+                
+                E.x_coordinate -- ;
+                
+                number-- ;
+                
+                cell_count++ ;
+                
+                
+                
+            }
+            
+            else
+                
+                if (E.x_coordinate+1 < grid_width && Matrix[E.x_coordinate+1][E.y_coordinate][E.z_coordinate].number == number) //search right
+                    
+                {
+                    
+                    E.x_coordinate ++ ;
+                    
+                    number --;
+                    
+                    cell_count++ ;
+                    
+                    
+                    
+                }
+            
+                else
+                    
+                    if ( E.z_coordinate-1 >=0 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate-1].number == number+1-vias_cost) //search below
+                        
+                    {
+                        
+                        vias_count ++ ;
+                        
+                        E.z_coordinate -- ;
+                        
+                        number = number - vias_cost ;
+                        
+                        cell_count++ ;
+                        
+                        
+                        
+                    }
+            
+                    else
+                        
+                        if ( E.z_coordinate+1 < 3 && Matrix[E.x_coordinate][E.y_coordinate][E.z_coordinate+1].number == number+1-vias_cost) //search above
+                            
+                        {
+                            
+                            vias_count ++ ;
+                            
+                            E.z_coordinate ++ ;
+                            
+                            number=  number - vias_cost ;
+                            
+                            cell_count++ ;
+                            
+                            
+                            
+                        }
+            
+                        else
+                            
+                            cout <<"Backtracing Error"; //cannot go vertical
+            
+            
+            
+        }
+        
+        
+        
+    }
+    
+    
+    
+    cell_count -- ; //recounts source !!
+    
+    
+    
+}
